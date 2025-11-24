@@ -15,6 +15,7 @@
     Updated: November 24, 2025 (switched from MART_EVENTS to MART_ACCOUNT)
     Updated: November 24, 2025 (removed churn rate card, renamed "churn" to "inactive" 
              throughout report since users are not technically churned yet)
+    Updated: November 24, 2025 (added Geographic Distribution section)
     Created By: Claude AI for MyBambu Paid Ads Team
 
     CHANGE LOG:
@@ -25,6 +26,8 @@
     - v3: Changed all references from "churned" to "inactive" (users haven't 
           technically churned yet - they just haven't transacted)
     - v3: Updated charts, tables, and insights to use "inactive" terminology
+    - v4: Added Geographic Distribution section with state and city analysis
+    - v4: Data sourced from MART_CONTACT joined to MART_ACCOUNT via ID = ACCOUNT_ID
 
     DATA SOURCES:
     1. MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT
@@ -37,6 +40,11 @@
     2. MYBAMBU_PROD.BAMBU_MART_GALILEO.MART_SRDF_POSTED_TRANSACTIONS
        - Used for: Activation metrics, feature adoption, transaction categorization
        - Join Key: GALILEO_CUSTOMER_NUMBER (from MART_ACCOUNT) = PRN (from transactions)
+
+    3. MYBAMBU_PROD.BAMBU_MART_SF.MART_CONTACT
+       - Used for: Geographic distribution (state and city data)
+       - Join Key: MART_ACCOUNT.ID = MART_CONTACT.ACCOUNT_ID
+       - Fields: MAILING_STATE, MAILING_CITY
 
     KEY METRICS METHODOLOGY:
 
@@ -132,6 +140,48 @@
     -- Visa Plus Load: 23 txns, 10 users
     -- Bambu Pay Outgoing: 9 txns, 4 users
     -- Total Transactions: 34,516
+
+    -- Geographic Distribution (Top 10 States)
+    SELECT mc.MAILING_STATE as STATE, COUNT(DISTINCT ma.MW_UUID) as USER_COUNT
+    FROM MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT ma
+    JOIN MYBAMBU_PROD.BAMBU_MART_SF.MART_CONTACT mc ON ma.ID = mc.ACCOUNT_ID
+    WHERE LOWER(ma.MEDIA_SOURCE) IN ('unavailable', 'organic')
+      AND ma.BANK_ACCOUNT_CREATED_AT >= '2025-11-01'
+      AND ma.BANK_ACCOUNT_CREATED_AT < '2025-12-01'
+      AND mc.MAILING_STATE IS NOT NULL AND mc.MAILING_STATE != ''
+    GROUP BY mc.MAILING_STATE ORDER BY USER_COUNT DESC LIMIT 10;
+    -- Results:
+    -- New York: 2,759 (24.87%)
+    -- Texas: 947 (8.54%)
+    -- Florida: 832 (7.50%)
+    -- California: 633 (5.71%)
+    -- Georgia: 473 (4.26%)
+    -- New Jersey: 391 (3.52%)
+    -- Ohio: 385 (3.47%)
+    -- North Carolina: 375 (3.38%)
+    -- Pennsylvania: 341 (3.07%)
+    -- Illinois: 328 (2.96%)
+
+    -- Geographic Distribution (Top 10 Cities)
+    SELECT mc.MAILING_CITY as CITY, mc.MAILING_STATE as STATE, COUNT(DISTINCT ma.MW_UUID) as USER_COUNT
+    FROM MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT ma
+    JOIN MYBAMBU_PROD.BAMBU_MART_SF.MART_CONTACT mc ON ma.ID = mc.ACCOUNT_ID
+    WHERE LOWER(ma.MEDIA_SOURCE) IN ('unavailable', 'organic')
+      AND ma.BANK_ACCOUNT_CREATED_AT >= '2025-11-01'
+      AND ma.BANK_ACCOUNT_CREATED_AT < '2025-12-01'
+      AND mc.MAILING_CITY IS NOT NULL AND mc.MAILING_CITY != ''
+    GROUP BY mc.MAILING_CITY, mc.MAILING_STATE ORDER BY USER_COUNT DESC LIMIT 10;
+    -- Results:
+    -- Brooklyn, NY: 1,324
+    -- Bronx, NY: 314
+    -- Houston, TX: 167
+    -- New York, NY: 132
+    -- Miami, FL: 105
+    -- Jamaica, NY: 104
+    -- Chicago, IL: 99
+    -- Detroit, MI: 88
+    -- Philadelphia, PA: 88
+    -- Dallas, TX: 87
 
     ============================================================================
     -->
@@ -503,6 +553,107 @@
                 </div>
             </div>
 
+            <!-- Geographic Distribution -->
+            <div class="section">
+                <h2 class="section-title">Geographic Distribution</h2>
+                
+                <div class="insight-box">
+                    <h4>Key Insight</h4>
+                    <p>New York dominates organic acquisition with 24.87% of all users (2,759), with Brooklyn alone accounting for 1,324 users (12% of total). The top 10 states represent 67.3% of all organic users, indicating strong geographic concentration in the Northeast and major metro areas.</p>
+                </div>
+
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3>Top 10 States by User Count</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="statesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Top 10 Cities by User Count</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="citiesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>State Distribution Details</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>State</th>
+                                <th>Users</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>New York</td>
+                                <td>2,759</td>
+                                <td>24.87%</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Texas</td>
+                                <td>947</td>
+                                <td>8.54%</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Florida</td>
+                                <td>832</td>
+                                <td>7.50%</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>California</td>
+                                <td>633</td>
+                                <td>5.71%</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Georgia</td>
+                                <td>473</td>
+                                <td>4.26%</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>New Jersey</td>
+                                <td>391</td>
+                                <td>3.52%</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>Ohio</td>
+                                <td>385</td>
+                                <td>3.47%</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>North Carolina</td>
+                                <td>375</td>
+                                <td>3.38%</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>Pennsylvania</td>
+                                <td>341</td>
+                                <td>3.07%</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>Illinois</td>
+                                <td>328</td>
+                                <td>2.96%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Activation & Feature Adoption -->
             <div class="section">
                 <h2 class="section-title">Activation & Feature Adoption</h2>
@@ -730,6 +881,7 @@
                         <li><strong>Remittance-First Onboarding:</strong> Since Visa Money Transfer is the #1 transaction type (71.3% of active users), emphasize remittance features in the onboarding flow.</li>
                         <li><strong>7-Day Window Focus:</strong> 91.9% of users who activate do so within 7 days. Concentrate all re-engagement efforts within this window.</li>
                         <li><strong>Re-engage 7,727 Inactive Users:</strong> Deploy targeted push notifications and email campaigns to the inactive cohort with incentives for first transaction.</li>
+                        <li><strong>New York Focus:</strong> With 25% of organic users from New York (especially Brooklyn), consider geo-targeted campaigns and local partnerships in the NYC metro area.</li>
                         <li><strong>Capitalize on Volume:</strong> The consistent ~32% activation rate suggests acquisition quality is stable. Focus on increasing volume while maintaining this rate.</li>
                     </ul>
                 </div>
@@ -738,7 +890,7 @@
 
         <div class="footer">
             <p><strong>MyBambu Paid Ads Team</strong></p>
-            <p>Data Sources: Snowflake MART_ACCOUNT, MART_SRDF_POSTED_TRANSACTIONS</p>
+            <p>Data Sources: Snowflake MART_ACCOUNT, MART_CONTACT, MART_SRDF_POSTED_TRANSACTIONS</p>
             <p>Report Generated: November 24, 2025</p>
         </div>
     </div>
@@ -782,6 +934,55 @@
                     tension: 0.4,
                     pointRadius: 4,
                     pointBackgroundColor: '#1e40af'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // States Chart
+        new Chart(document.getElementById('statesChart'), {
+            type: 'bar',
+            data: {
+                labels: ['New York', 'Texas', 'Florida', 'California', 'Georgia', 'New Jersey', 'Ohio', 'North Carolina', 'Pennsylvania', 'Illinois'],
+                datasets: [{
+                    label: 'Users',
+                    data: [2759, 947, 832, 633, 473, 391, 385, 375, 341, 328],
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Cities Chart
+        new Chart(document.getElementById('citiesChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Brooklyn', 'Bronx', 'Houston', 'New York', 'Miami', 'Jamaica', 'Chicago', 'Detroit', 'Philadelphia', 'Dallas'],
+                datasets: [{
+                    label: 'Users',
+                    data: [1324, 314, 167, 132, 105, 104, 99, 88, 88, 87],
+                    backgroundColor: '#10b981',
+                    borderRadius: 6
                 }]
             },
             options: {
