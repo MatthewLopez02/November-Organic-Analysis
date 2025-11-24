@@ -12,31 +12,29 @@
     ============================================================================
 
     Report Created: November 24, 2025
+    Updated: November 24, 2025 (switched from MART_EVENTS to MART_ACCOUNT)
     Created By: Claude AI for MyBambu Paid Ads Team
 
     DATA SOURCES:
-    1. MYBAMBU_PROD.BAMBU_MART_SINGULAR.MART_EVENTS
-       - Used for: User acquisition data, platform breakdown, daily/weekly trends
-       - Filter: Partner = 'Organic' AND Name = 'customer_created'
+    1. MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT
+       - Used for: User acquisition data, daily/weekly trends
+       - Filter: MEDIA_SOURCE IN ('unavailable', 'organic') (case-insensitive)
+       - Date Field: BANK_ACCOUNT_CREATED_AT
        - Date Range: November 1-30, 2025
-       - User Identifier: COUNT DISTINCT of DEVICE_ID
+       - User Identifier: COUNT DISTINCT of MW_UUID
 
-    2. MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT
-       - Used for: Connecting MART_EVENTS to transaction data
-       - Join Key: CUSTOM_USER_ID (from MART_EVENTS) = MW_UUID (from MART_ACCOUNT)
-
-    3. MYBAMBU_PROD.BAMBU_MART_GALILEO.MART_SRDF_POSTED_TRANSACTIONS
+    2. MYBAMBU_PROD.BAMBU_MART_GALILEO.MART_SRDF_POSTED_TRANSACTIONS
        - Used for: Activation metrics, feature adoption, transaction categorization
        - Join Key: GALILEO_CUSTOMER_NUMBER (from MART_ACCOUNT) = PRN (from transactions)
 
     KEY METRICS METHODOLOGY:
 
-    1. Total Organic Users: COUNT(DISTINCT DEVICE_ID) where Partner='Organic'
-       and Name='customer_created' in November 2025
+    1. Total Organic Users: COUNT(DISTINCT MW_UUID) where LOWER(MEDIA_SOURCE) IN ('unavailable', 'organic')
+       and BANK_ACCOUNT_CREATED_AT in November 2025
 
     2. Activation Rate: Users with at least one transaction / Total users
-       - "Within 7 days" = first transaction within 7 days of customer_created date
-       - "Within 30 days" = first transaction within 30 days of customer_created date
+       - "Within 7 days" = first transaction within 7 days of BANK_ACCOUNT_CREATED_AT date
+       - "Within 30 days" = first transaction within 30 days of BANK_ACCOUNT_CREATED_AT date
 
     3. Churn Rate: Users with NO transactions / Total users
        - Calculated by LEFT JOINing users to transactions and counting NULLs
@@ -65,45 +63,62 @@
 
     QUERIES USED:
 
-    -- Total November Organic Users
-    SELECT COUNT(DISTINCT DEVICE_ID) AS total_november_organic_users
-    FROM MYBAMBU_PROD.BAMBU_MART_SINGULAR.MART_EVENTS
-    WHERE PARTNER = 'Organic'
-      AND NAME = 'customer_created'
-      AND DATE(ADJUSTED_TIMESTAMP) >= '2025-11-01'
-      AND DATE(ADJUSTED_TIMESTAMP) <= '2025-11-30';
-    -- Result: 1,555 users
+    -- Total November Organic Users (from MART_ACCOUNT)
+    SELECT COUNT(DISTINCT MW_UUID) AS total_november_organic_users
+    FROM MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT
+    WHERE DATE(BANK_ACCOUNT_CREATED_AT) >= '2025-11-01'
+      AND DATE(BANK_ACCOUNT_CREATED_AT) <= '2025-11-30'
+      AND LOWER(MEDIA_SOURCE) IN ('unavailable', 'organic');
+    -- Result: 11,021 users
 
     -- Weekly Breakdown
     SELECT
         CASE
-            WHEN DATE(ADJUSTED_TIMESTAMP) BETWEEN '2025-11-01' AND '2025-11-07' THEN 'Week 1'
-            WHEN DATE(ADJUSTED_TIMESTAMP) BETWEEN '2025-11-08' AND '2025-11-14' THEN 'Week 2'
-            WHEN DATE(ADJUSTED_TIMESTAMP) BETWEEN '2025-11-15' AND '2025-11-21' THEN 'Week 3'
-            WHEN DATE(ADJUSTED_TIMESTAMP) BETWEEN '2025-11-22' AND '2025-11-30' THEN 'Week 4'
+            WHEN DATE(BANK_ACCOUNT_CREATED_AT) BETWEEN '2025-11-01' AND '2025-11-07' THEN 'Week 1'
+            WHEN DATE(BANK_ACCOUNT_CREATED_AT) BETWEEN '2025-11-08' AND '2025-11-14' THEN 'Week 2'
+            WHEN DATE(BANK_ACCOUNT_CREATED_AT) BETWEEN '2025-11-15' AND '2025-11-21' THEN 'Week 3'
+            WHEN DATE(BANK_ACCOUNT_CREATED_AT) BETWEEN '2025-11-22' AND '2025-11-30' THEN 'Week 4'
         END AS week,
-        COUNT(DISTINCT DEVICE_ID) AS users
-    FROM MYBAMBU_PROD.BAMBU_MART_SINGULAR.MART_EVENTS
-    WHERE PARTNER = 'Organic'
-      AND NAME = 'customer_created'
-      AND DATE(ADJUSTED_TIMESTAMP) >= '2025-11-01'
-      AND DATE(ADJUSTED_TIMESTAMP) <= '2025-11-30'
+        COUNT(DISTINCT MW_UUID) AS users
+    FROM MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT
+    WHERE DATE(BANK_ACCOUNT_CREATED_AT) >= '2025-11-01'
+      AND DATE(BANK_ACCOUNT_CREATED_AT) <= '2025-11-30'
+      AND LOWER(MEDIA_SOURCE) IN ('unavailable', 'organic')
     GROUP BY week ORDER BY week;
-    -- Results: Week 1: 638, Week 2: 188, Week 3: 643, Week 4: 105
+    -- Results: Week 1: 1,490, Week 2: 1,473, Week 3: 5,633, Week 4: 2,425
 
     -- Activation Metrics (via table joins)
-    -- Users with transactions: 85
-    -- Transacted within 7 days: 52
-    -- Transacted within 30 days: 85
+    -- Users with transactions: 3,294 (29.89%)
+    -- Transacted within 7 days: 3,026
+    -- Transacted within 30 days: 3,294
 
     -- Churn Metrics
-    -- Total users: 1,555
-    -- Users with transactions: 85 (5.47%)
-    -- Users without transactions: 1,470 (94.53%)
+    -- Total users: 11,021
+    -- Users with transactions: 3,294 (29.89%)
+    -- Users without transactions: 7,727 (70.11%)
 
-    -- Platform Breakdown
-    -- Android: 1,161 users (74.7%)
-    -- iOS: 394 users (25.3%)
+    -- Churn by Week:
+    -- Week 1: 1,490 total, 480 activated, 1,010 churned (67.79%)
+    -- Week 2: 1,473 total, 458 activated, 1,015 churned (68.91%)
+    -- Week 3: 5,633 total, 1,877 activated, 3,756 churned (66.68%)
+    -- Week 4: 2,425 total, 479 activated, 1,946 churned (80.25%)
+
+    -- Transaction Categories:
+    -- Visa Money Transfer: 12,862 txns, 2,350 users
+    -- Card Purchase: 9,615 txns, 1,597 users
+    -- Other: 6,161 txns, 1,269 users
+    -- Incoming P2P: 2,078 txns, 775 users
+    -- Outgoing P2P: 1,783 txns, 869 users
+    -- Barcode Cashload: 1,072 txns, 454 users
+    -- Top Up: 238 txns, 103 users
+    -- Bambu Pay Incoming: 199 txns, 90 users
+    -- Direct Deposit: 183 txns, 86 users
+    -- Allpoint ATM: 157 txns, 41 users
+    -- IMT: 108 txns, 9 users
+    -- Card Cashload: 28 txns, 14 users
+    -- Visa Plus Load: 23 txns, 10 users
+    -- Bambu Pay Outgoing: 9 txns, 4 users
+    -- Total Transactions: 34,516
 
     ============================================================================
     -->
@@ -317,6 +332,19 @@
             color: #7f1d1d;
         }
 
+        .alert-box.warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .alert-box.warning h4 {
+            color: #92400e;
+        }
+
+        .alert-box.warning p {
+            color: #78350f;
+        }
+
         .footer {
             background: #1f2937;
             color: white;
@@ -371,26 +399,26 @@
                 <h2 class="section-title">Executive Summary</h2>
                 <div class="metrics-grid">
                     <div class="metric-card primary">
-                        <div class="metric-value">1,555</div>
+                        <div class="metric-value">11,021</div>
                         <div class="metric-label">Total Organic Users</div>
                     </div>
                     <div class="metric-card success">
-                        <div class="metric-value">5.47%</div>
+                        <div class="metric-value">29.89%</div>
                         <div class="metric-label">Activation Rate</div>
                     </div>
                     <div class="metric-card warning">
-                        <div class="metric-value">85</div>
+                        <div class="metric-value">3,294</div>
                         <div class="metric-label">Users with Transactions</div>
                     </div>
                     <div class="metric-card danger">
-                        <div class="metric-value">94.53%</div>
+                        <div class="metric-value">70.11%</div>
                         <div class="metric-label">Churn Rate (No Transactions)</div>
                     </div>
                 </div>
 
-                <div class="alert-box critical">
-                    <h4>Critical Finding</h4>
-                    <p>94.53% of November organic users (1,470 out of 1,555) have not completed any transactions since account creation. Only 85 users have activated their accounts with at least one transaction.</p>
+                <div class="alert-box warning">
+                    <h4>Key Finding</h4>
+                    <p>70.11% of November organic users (7,727 out of 11,021) have not completed any transactions since account creation. However, 3,294 users (29.89%) have activated their accounts, with 91.9% of those activating within 7 days of account creation.</p>
                 </div>
             </div>
 
@@ -419,26 +447,26 @@
                                 <tr>
                                     <td>Week 1</td>
                                     <td>Nov 1-7</td>
-                                    <td>638</td>
-                                    <td>41.0%</td>
+                                    <td>1,490</td>
+                                    <td>13.5%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 2</td>
                                     <td>Nov 8-14</td>
-                                    <td>188</td>
-                                    <td>12.1%</td>
+                                    <td>1,473</td>
+                                    <td>13.4%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 3</td>
                                     <td>Nov 15-21</td>
-                                    <td>643</td>
-                                    <td>41.4%</td>
+                                    <td>5,633</td>
+                                    <td>51.1%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 4</td>
                                     <td>Nov 22-30</td>
-                                    <td>105</td>
-                                    <td>6.8%</td>
+                                    <td>2,425</td>
+                                    <td>22.0%</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -447,7 +475,7 @@
 
                 <div class="insight-box">
                     <h4>Key Insight</h4>
-                    <p>Acquisition was concentrated in Weeks 1 and 3, with significant drops in Weeks 2 and 4. Week 4 shows only partial data (through Nov 23), which accounts for lower numbers. The pattern suggests potential correlation with marketing activities or external factors.</p>
+                    <p>Week 3 (Nov 15-21) saw a massive surge in organic acquisitions with 5,633 users - more than 3x the previous weeks. This coincides with November 19th peak (1,978 users in a single day). Week 4 data is partial (through Nov 24) but still showing strong numbers at 2,425 users.</p>
                 </div>
             </div>
 
@@ -462,41 +490,7 @@
 
                 <div class="insight-box">
                     <h4>Daily Pattern Analysis</h4>
-                    <p>Peak acquisition days were November 2 (206 users), November 1 (198 users), and November 3 (183 users). A significant drop occurred November 5-11 (averaging only 5 users/day), followed by recovery mid-month. This volatility suggests organic acquisition may be influenced by external campaigns or app store visibility changes.</p>
-                </div>
-            </div>
-
-            <!-- Platform Analysis -->
-            <div class="section">
-                <h2 class="section-title">Platform & Device Analysis</h2>
-                <div class="grid-2">
-                    <div class="chart-container">
-                        <h3>Platform Distribution</h3>
-                        <div class="chart-wrapper">
-                            <canvas id="platformChart"></canvas>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="metric-card" style="margin-bottom: 20px;">
-                            <div class="metric-value">74.7%</div>
-                            <div class="metric-label">Android Users (1,161)</div>
-                            <div class="progress-bar" style="margin-top: 10px;">
-                                <div class="progress-fill" style="width: 74.7%;"></div>
-                            </div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-value">25.3%</div>
-                            <div class="metric-label">iOS Users (394)</div>
-                            <div class="progress-bar" style="margin-top: 10px;">
-                                <div class="progress-fill" style="width: 25.3%; background: linear-gradient(90deg, #7c3aed, #a78bfa);"></div>
-                            </div>
-                        </div>
-
-                        <div class="insight-box" style="margin-top: 20px;">
-                            <h4>Platform Insight</h4>
-                            <p>Android dominates organic acquisition at nearly 3:1 ratio over iOS. This aligns with typical demographic patterns for remittance-focused financial apps.</p>
-                        </div>
-                    </div>
+                    <p>Organic acquisition spiked dramatically starting November 17th, with November 19th being the peak day at 1,978 users. The period from Nov 17-24 averaged 885 users/day, compared to just 213 users/day during Nov 1-16. This 4x increase suggests a significant change in organic visibility or a successful campaign driving organic traffic.</p>
                 </div>
             </div>
 
@@ -506,19 +500,19 @@
 
                 <div class="metrics-grid">
                     <div class="metric-card success">
-                        <div class="metric-value">85</div>
+                        <div class="metric-value">3,294</div>
                         <div class="metric-label">Users with Any Transaction</div>
                     </div>
                     <div class="metric-card primary">
-                        <div class="metric-value">52</div>
+                        <div class="metric-value">3,026</div>
                         <div class="metric-label">Transacted Within 7 Days</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value">61.2%</div>
+                        <div class="metric-value">91.9%</div>
                         <div class="metric-label">7-Day Activation (of Active Users)</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value">1,228</div>
+                        <div class="metric-value">34,516</div>
                         <div class="metric-label">Total Transactions</div>
                     </div>
                 </div>
@@ -551,82 +545,82 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td>Visa Money Transfer</td>
+                                <td>12,862</td>
+                                <td>2,350</td>
+                                <td>5.5</td>
+                            </tr>
+                            <tr>
                                 <td>Card Purchase</td>
-                                <td>543</td>
-                                <td>60</td>
-                                <td>9.1</td>
+                                <td>9,615</td>
+                                <td>1,597</td>
+                                <td>6.0</td>
                             </tr>
                             <tr>
                                 <td>Other</td>
-                                <td>171</td>
-                                <td>38</td>
-                                <td>4.5</td>
-                            </tr>
-                            <tr>
-                                <td>Visa Money Transfer</td>
-                                <td>137</td>
-                                <td>24</td>
-                                <td>5.7</td>
-                            </tr>
-                            <tr>
-                                <td>Incoming P2P</td>
-                                <td>102</td>
-                                <td>28</td>
-                                <td>3.6</td>
-                            </tr>
-                            <tr>
-                                <td>Outgoing P2P</td>
-                                <td>82</td>
-                                <td>12</td>
-                                <td>6.8</td>
-                            </tr>
-                            <tr>
-                                <td>Direct Deposit</td>
-                                <td>54</td>
-                                <td>11</td>
+                                <td>6,161</td>
+                                <td>1,269</td>
                                 <td>4.9</td>
                             </tr>
                             <tr>
+                                <td>Incoming P2P</td>
+                                <td>2,078</td>
+                                <td>775</td>
+                                <td>2.7</td>
+                            </tr>
+                            <tr>
+                                <td>Outgoing P2P</td>
+                                <td>1,783</td>
+                                <td>869</td>
+                                <td>2.1</td>
+                            </tr>
+                            <tr>
                                 <td>Barcode Cashload</td>
-                                <td>47</td>
-                                <td>20</td>
+                                <td>1,072</td>
+                                <td>454</td>
                                 <td>2.4</td>
                             </tr>
                             <tr>
-                                <td>Bambu Pay Incoming</td>
-                                <td>37</td>
-                                <td>12</td>
-                                <td>3.1</td>
+                                <td>Top Up</td>
+                                <td>238</td>
+                                <td>103</td>
+                                <td>2.3</td>
                             </tr>
                             <tr>
-                                <td>Visa Plus Load</td>
-                                <td>16</td>
-                                <td>4</td>
-                                <td>4.0</td>
+                                <td>Bambu Pay Incoming</td>
+                                <td>199</td>
+                                <td>90</td>
+                                <td>2.2</td>
+                            </tr>
+                            <tr>
+                                <td>Direct Deposit</td>
+                                <td>183</td>
+                                <td>86</td>
+                                <td>2.1</td>
                             </tr>
                             <tr>
                                 <td>Allpoint ATM</td>
-                                <td>13</td>
-                                <td>7</td>
-                                <td>1.9</td>
+                                <td>157</td>
+                                <td>41</td>
+                                <td>3.8</td>
                             </tr>
                             <tr>
                                 <td>IMT</td>
-                                <td>12</td>
-                                <td>1</td>
+                                <td>108</td>
+                                <td>9</td>
                                 <td>12.0</td>
                             </tr>
                             <tr>
-                                <td>Top Up</td>
-                                <td>10</td>
-                                <td>7</td>
-                                <td>1.4</td>
+                                <td>Card Cashload</td>
+                                <td>28</td>
+                                <td>14</td>
+                                <td>2.0</td>
                             </tr>
                             <tr>
-                                <td>Card Cashload</td>
-                                <td>4</td>
-                                <td>3</td>
-                                <td>1.3</td>
+                                <td>Visa Plus Load</td>
+                                <td>23</td>
+                                <td>10</td>
+                                <td>2.3</td>
                             </tr>
                         </tbody>
                     </table>
@@ -634,7 +628,7 @@
 
                 <div class="insight-box">
                     <h4>Feature Adoption Insight</h4>
-                    <p><strong>Card Purchases dominate</strong> with 543 transactions across 60 users (70.6% of active users). This indicates that users who activate primarily use MyBambu for everyday spending. Visa Money Transfer and P2P features show healthy adoption among active users, suggesting remittance use cases are being fulfilled.</p>
+                    <p><strong>Visa Money Transfer dominates</strong> with 12,862 transactions across 2,350 users (71.3% of active users). This indicates strong remittance use case adoption among organic users. Card Purchase is second with 9,615 transactions, showing healthy everyday spending usage. The high 7-day activation rate (91.9%) suggests that users who will transact do so quickly after account creation.</p>
                 </div>
             </div>
 
@@ -642,9 +636,9 @@
             <div class="section">
                 <h2 class="section-title">Churn Analysis</h2>
 
-                <div class="alert-box critical">
-                    <h4>High Churn Alert</h4>
-                    <p>94.53% of November organic users have not completed any transactions. This represents a critical conversion problem that requires immediate attention.</p>
+                <div class="alert-box warning">
+                    <h4>Churn Overview</h4>
+                    <p>70.11% of November organic users have not completed any transactions. While this represents 7,727 users, the 29.89% activation rate is a significant improvement and these users are showing strong transaction engagement with an average of 10.5 transactions per active user.</p>
                 </div>
 
                 <div class="grid-2">
@@ -669,31 +663,31 @@
                             <tbody>
                                 <tr>
                                     <td>Week 1</td>
-                                    <td>638</td>
-                                    <td>82</td>
-                                    <td>556</td>
-                                    <td>87.15%</td>
+                                    <td>1,490</td>
+                                    <td>480</td>
+                                    <td>1,010</td>
+                                    <td>67.79%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 2</td>
-                                    <td>188</td>
-                                    <td>3</td>
-                                    <td>185</td>
-                                    <td>98.40%</td>
+                                    <td>1,473</td>
+                                    <td>458</td>
+                                    <td>1,015</td>
+                                    <td>68.91%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 3</td>
-                                    <td>643</td>
-                                    <td>0</td>
-                                    <td>643</td>
-                                    <td>100.00%</td>
+                                    <td>5,633</td>
+                                    <td>1,877</td>
+                                    <td>3,756</td>
+                                    <td>66.68%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 4</td>
-                                    <td>105</td>
-                                    <td>0</td>
-                                    <td>105</td>
-                                    <td>100.00%</td>
+                                    <td>2,425</td>
+                                    <td>479</td>
+                                    <td>1,946</td>
+                                    <td>80.25%</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -702,7 +696,7 @@
 
                 <div class="insight-box">
                     <h4>Churn Pattern Analysis</h4>
-                    <p>Week 1 users show the best activation rate (12.85%), which is expected as they've had more time to transact. Weeks 3 and 4 show 100% churn, but these users are still very new (less than 2 weeks old) and may still activate. The Week 2 cohort showing 98.4% churn after 2+ weeks is concerning and warrants investigation into what changed during that acquisition period.</p>
+                    <p>Weeks 1-3 show consistent activation rates around 31-33%, with Week 3's massive volume (5,633 users) maintaining the same quality. Week 4 shows higher churn (80.25%) but these users are still very new (0-3 days old) and may still activate. The consistent ~67-69% churn rate across Weeks 1-3 suggests a stable user quality regardless of acquisition volume.</p>
                 </div>
             </div>
 
@@ -722,12 +716,12 @@
                 <div class="recommendations">
                     <h4>Strategic Actions</h4>
                     <ul>
-                        <li><strong>Immediate Onboarding Optimization:</strong> With 94.53% churn, focus on improving the first-time user experience and reducing friction in the activation flow.</li>
-                        <li><strong>Push Notification Campaign:</strong> Target the 1,470 users who haven't transacted with personalized reminders and incentives to complete their first transaction.</li>
-                        <li><strong>Week 2 Cohort Investigation:</strong> Analyze what was different about Week 2 acquisition (Nov 8-14) that resulted in near-zero activation despite having 2+ weeks to convert.</li>
-                        <li><strong>Android-First Strategy:</strong> Given 74.7% of organic users are on Android, prioritize Android app store optimization and Android-specific features.</li>
-                        <li><strong>Card Purchase Promotion:</strong> Since Card Purchase is the dominant transaction type, emphasize card activation and spending benefits in onboarding.</li>
-                        <li><strong>7-Day Activation Window:</strong> 61.2% of users who activate do so within 7 days. Focus re-engagement efforts heavily on the first week post-signup.</li>
+                        <li><strong>Investigate Week 3 Spike:</strong> The 4x increase in organic acquisition starting Nov 17th warrants investigation to understand what drove this growth and how to sustain it.</li>
+                        <li><strong>Target Week 4 Cohort:</strong> With 80.25% showing no transactions yet, these 1,946 users are still in the critical activation window. Deploy re-engagement campaigns immediately.</li>
+                        <li><strong>Remittance-First Onboarding:</strong> Since Visa Money Transfer is the #1 transaction type (71.3% of active users), emphasize remittance features in the onboarding flow.</li>
+                        <li><strong>7-Day Window Focus:</strong> 91.9% of users who activate do so within 7 days. Concentrate all re-engagement efforts within this window.</li>
+                        <li><strong>Re-engage 7,727 Inactive Users:</strong> Deploy targeted push notifications and email campaigns to the inactive cohort with incentives for first transaction.</li>
+                        <li><strong>Capitalize on Volume:</strong> The consistent ~32% activation rate suggests acquisition quality is stable. Focus on increasing volume while maintaining this rate.</li>
                     </ul>
                 </div>
             </div>
@@ -735,7 +729,7 @@
 
         <div class="footer">
             <p><strong>MyBambu Paid Ads Team</strong></p>
-            <p>Data Sources: Snowflake MART_EVENTS (Singular), MART_ACCOUNT, MART_SRDF_POSTED_TRANSACTIONS</p>
+            <p>Data Sources: Snowflake MART_ACCOUNT, MART_SRDF_POSTED_TRANSACTIONS</p>
             <p>Report Generated: November 24, 2025</p>
         </div>
     </div>
@@ -748,7 +742,7 @@
                 labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
                 datasets: [{
                     label: 'Users Acquired',
-                    data: [638, 188, 643, 105],
+                    data: [1490, 1473, 5633, 2425],
                     backgroundColor: ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd'],
                     borderRadius: 8
                 }]
@@ -769,10 +763,10 @@
         new Chart(document.getElementById('dailyChart'), {
             type: 'line',
             data: {
-                labels: ['Nov 1', 'Nov 2', 'Nov 3', 'Nov 4', 'Nov 5', 'Nov 6', 'Nov 7', 'Nov 8', 'Nov 9', 'Nov 10', 'Nov 11', 'Nov 12', 'Nov 13', 'Nov 14', 'Nov 15', 'Nov 16', 'Nov 17', 'Nov 18', 'Nov 19', 'Nov 20', 'Nov 21', 'Nov 22', 'Nov 23'],
+                labels: ['Nov 1', 'Nov 2', 'Nov 3', 'Nov 4', 'Nov 5', 'Nov 6', 'Nov 7', 'Nov 8', 'Nov 9', 'Nov 10', 'Nov 11', 'Nov 12', 'Nov 13', 'Nov 14', 'Nov 15', 'Nov 16', 'Nov 17', 'Nov 18', 'Nov 19', 'Nov 20', 'Nov 21', 'Nov 22', 'Nov 23', 'Nov 24'],
                 datasets: [{
                     label: 'Daily Users',
-                    data: [198, 206, 183, 42, 5, 7, 5, 4, 4, 8, 2, 22, 79, 70, 64, 56, 92, 88, 132, 115, 111, 91, 15],
+                    data: [215, 211, 244, 210, 206, 200, 204, 209, 145, 245, 219, 230, 227, 198, 171, 161, 320, 566, 1978, 1071, 1366, 879, 959, 587],
                     borderColor: '#1e40af',
                     backgroundColor: 'rgba(30, 64, 175, 0.1)',
                     fill: true,
@@ -793,37 +787,15 @@
             }
         });
 
-        // Platform Distribution Chart
-        new Chart(document.getElementById('platformChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Android', 'iOS'],
-                datasets: [{
-                    data: [1161, 394],
-                    backgroundColor: ['#10b981', '#7c3aed'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
         // Transaction Category Chart
         new Chart(document.getElementById('transactionCategoryChart'), {
             type: 'bar',
             data: {
-                labels: ['Card Purchase', 'Other', 'Visa Money Transfer', 'Incoming P2P', 'Outgoing P2P', 'Direct Deposit', 'Barcode Cashload'],
+                labels: ['Visa Money Transfer', 'Card Purchase', 'Other', 'Incoming P2P', 'Outgoing P2P', 'Barcode Cashload', 'Top Up'],
                 datasets: [{
                     label: 'Transactions',
-                    data: [543, 171, 137, 102, 82, 54, 47],
-                    backgroundColor: ['#1e40af', '#6b7280', '#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'],
+                    data: [12862, 9615, 6161, 2078, 1783, 1072, 238],
+                    backgroundColor: ['#7c3aed', '#1e40af', '#6b7280', '#10b981', '#f59e0b', '#06b6d4', '#ec4899'],
                     borderRadius: 6
                 }]
             },
@@ -841,10 +813,10 @@
         new Chart(document.getElementById('featureAdoptionChart'), {
             type: 'doughnut',
             data: {
-                labels: ['Card Purchase', 'Visa Money Transfer', 'Incoming P2P', 'Barcode Cashload', 'Outgoing P2P', 'Bambu Pay', 'Other'],
+                labels: ['Visa Money Transfer', 'Card Purchase', 'Other', 'Outgoing P2P', 'Incoming P2P', 'Barcode Cashload', 'Top Up'],
                 datasets: [{
-                    data: [60, 24, 28, 20, 12, 12, 38],
-                    backgroundColor: ['#1e40af', '#7c3aed', '#10b981', '#06b6d4', '#f59e0b', '#ec4899', '#6b7280'],
+                    data: [2350, 1597, 1269, 869, 775, 454, 103],
+                    backgroundColor: ['#7c3aed', '#1e40af', '#6b7280', '#f59e0b', '#10b981', '#06b6d4', '#ec4899'],
                     borderWidth: 0
                 }]
             },
@@ -866,7 +838,7 @@
             data: {
                 labels: ['Churned (No Transactions)', 'Activated'],
                 datasets: [{
-                    data: [1470, 85],
+                    data: [7727, 3294],
                     backgroundColor: ['#ef4444', '#10b981'],
                     borderWidth: 0
                 }]
@@ -890,13 +862,13 @@
                 datasets: [
                     {
                         label: 'Activated',
-                        data: [82, 3, 0, 0],
+                        data: [480, 458, 1877, 479],
                         backgroundColor: '#10b981',
                         borderRadius: 6
                     },
                     {
                         label: 'Churned',
-                        data: [556, 185, 643, 105],
+                        data: [1010, 1015, 3756, 1946],
                         backgroundColor: '#ef4444',
                         borderRadius: 6
                     }
