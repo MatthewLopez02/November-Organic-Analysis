@@ -16,6 +16,7 @@
     Updated: November 24, 2025 (removed churn rate card, renamed "churn" to "inactive" 
              throughout report since users are not technically churned yet)
     Updated: November 24, 2025 (added Geographic Distribution section)
+    Updated: December 1, 2025 (updated with complete November 2025 data - Nov 1-30)
     Created By: Claude AI for MyBambu Paid Ads Team
 
     CHANGE LOG:
@@ -28,6 +29,10 @@
     - v3: Updated charts, tables, and insights to use "inactive" terminology
     - v4: Added Geographic Distribution section with state and city analysis
     - v4: Data sourced from MART_CONTACT joined to MART_ACCOUNT via ID = ACCOUNT_ID
+    - v5: Updated with complete November 2025 data (Nov 1-30)
+    - v5: Total users increased from 11,021 to 16,939
+    - v5: Week 4 now includes Nov 22-30 (was partial through Nov 24)
+    - v5: All metrics recalculated with full month data
 
     DATA SOURCES:
     1. MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT
@@ -82,7 +87,7 @@
     - Week 3: November 15-21, 2025
     - Week 4: November 22-30, 2025
 
-    QUERIES USED:
+    QUERIES USED (Updated December 1, 2025):
 
     -- Total November Organic Users (from MART_ACCOUNT)
     SELECT COUNT(DISTINCT MW_UUID) AS total_november_organic_users
@@ -90,7 +95,7 @@
     WHERE DATE(BANK_ACCOUNT_CREATED_AT) >= '2025-11-01'
       AND DATE(BANK_ACCOUNT_CREATED_AT) <= '2025-11-30'
       AND LOWER(MEDIA_SOURCE) IN ('unavailable', 'organic');
-    -- Result: 11,021 users
+    -- Result: 16,939 users
 
     -- Weekly Breakdown
     SELECT
@@ -106,40 +111,48 @@
       AND DATE(BANK_ACCOUNT_CREATED_AT) <= '2025-11-30'
       AND LOWER(MEDIA_SOURCE) IN ('unavailable', 'organic')
     GROUP BY week ORDER BY week;
-    -- Results: Week 1: 1,490, Week 2: 1,473, Week 3: 5,633, Week 4: 2,425
+    -- Results: Week 1: 1,490, Week 2: 1,473, Week 3: 5,633, Week 4: 8,343
+
+    -- Daily Acquisition (Nov 1-30)
+    -- Nov 1: 215, Nov 2: 211, Nov 3: 244, Nov 4: 210, Nov 5: 206, Nov 6: 200, Nov 7: 204
+    -- Nov 8: 209, Nov 9: 145, Nov 10: 245, Nov 11: 219, Nov 12: 230, Nov 13: 227, Nov 14: 198
+    -- Nov 15: 171, Nov 16: 161, Nov 17: 320, Nov 18: 566, Nov 19: 1978, Nov 20: 1071, Nov 21: 1366
+    -- Nov 22: 879, Nov 23: 959, Nov 24: 1724, Nov 25: 1720, Nov 26: 1715, Nov 27: 564, Nov 28: 327, Nov 29: 271, Nov 30: 184
 
     -- Activation Metrics (via table joins)
-    -- Users with transactions: 3,294 (29.89%)
-    -- Transacted within 7 days: 3,026
-    -- Transacted within 30 days: 3,294
+    -- Total users: 16,939
+    -- Users with transactions: 5,338 (31.52%)
+    -- Transacted within 7 days: 4,855
+    -- Transacted within 30 days: 5,338
+    -- 7-day activation rate (of active users): 90.95%
 
     -- Inactive Metrics (users without any transactions yet)
-    -- Total users: 11,021
-    -- Users with transactions: 3,294 (29.89%)
-    -- Users without transactions (inactive): 7,727 (70.11%)
+    -- Total users: 16,939
+    -- Users with transactions: 5,338 (31.52%)
+    -- Users without transactions (inactive): 11,601 (68.48%)
 
     -- Inactive by Week:
-    -- Week 1: 1,490 total, 480 activated, 1,010 inactive (67.79%)
-    -- Week 2: 1,473 total, 458 activated, 1,015 inactive (68.91%)
-    -- Week 3: 5,633 total, 1,877 activated, 3,756 inactive (66.68%)
-    -- Week 4: 2,425 total, 479 activated, 1,946 inactive (80.25%)
+    -- Week 1: 1,490 total, 541 activated, 949 inactive (63.69%)
+    -- Week 2: 1,473 total, 536 activated, 937 inactive (63.61%)
+    -- Week 3: 5,633 total, 2,218 activated, 3,415 inactive (60.63%)
+    -- Week 4: 8,343 total, 2,043 activated, 6,300 inactive (75.51%)
 
     -- Transaction Categories:
-    -- Visa Money Transfer: 12,862 txns, 2,350 users
-    -- Card Purchase: 9,615 txns, 1,597 users
-    -- Other: 6,161 txns, 1,269 users
-    -- Incoming P2P: 2,078 txns, 775 users
-    -- Outgoing P2P: 1,783 txns, 869 users
-    -- Barcode Cashload: 1,072 txns, 454 users
-    -- Top Up: 238 txns, 103 users
+    -- Visa Money Transfer: 25,877 txns, 4,011 users
+    -- Card Purchase: 19,311 txns, 3,442 users
+    -- Other: 12,183 txns, 2,176 users
+    -- Incoming P2P: 3,525 txns, 1,236 users
+    -- Outgoing P2P: 3,125 txns, 1,533 users
+    -- Barcode Cashload: 1,611 txns, 636 users
+    -- Top Up: 377 txns, 168 users
+    -- Direct Deposit: 300 txns, 126 users
+    -- Allpoint ATM: 235 txns, 77 users
     -- Bambu Pay Incoming: 199 txns, 90 users
-    -- Direct Deposit: 183 txns, 86 users
-    -- Allpoint ATM: 157 txns, 41 users
-    -- IMT: 108 txns, 9 users
-    -- Card Cashload: 28 txns, 14 users
-    -- Visa Plus Load: 23 txns, 10 users
+    -- IMT: 125 txns, 10 users
+    -- Card Cashload: 44 txns, 23 users
+    -- Visa Plus Load: 31 txns, 12 users
     -- Bambu Pay Outgoing: 9 txns, 4 users
-    -- Total Transactions: 34,516
+    -- Total Transactions: 66,952
 
     -- Geographic Distribution (Top 10 States)
     SELECT mc.MAILING_STATE as STATE, COUNT(DISTINCT ma.MW_UUID) as USER_COUNT
@@ -151,16 +164,16 @@
       AND mc.MAILING_STATE IS NOT NULL AND mc.MAILING_STATE != ''
     GROUP BY mc.MAILING_STATE ORDER BY USER_COUNT DESC LIMIT 10;
     -- Results:
-    -- New York: 2,759 (24.87%)
-    -- Texas: 947 (8.54%)
-    -- Florida: 832 (7.50%)
-    -- California: 633 (5.71%)
-    -- Georgia: 473 (4.26%)
-    -- New Jersey: 391 (3.52%)
-    -- Ohio: 385 (3.47%)
-    -- North Carolina: 375 (3.38%)
-    -- Pennsylvania: 341 (3.07%)
-    -- Illinois: 328 (2.96%)
+    -- New York: 4,418 (26.08%)
+    -- Texas: 1,342 (7.92%)
+    -- Florida: 1,239 (7.31%)
+    -- California: 934 (5.51%)
+    -- Georgia: 785 (4.63%)
+    -- New Jersey: 658 (3.88%)
+    -- Pennsylvania: 621 (3.67%)
+    -- Ohio: 591 (3.49%)
+    -- North Carolina: 520 (3.07%)
+    -- Illinois: 458 (2.70%)
 
     -- Geographic Distribution (Top 10 Cities)
     SELECT mc.MAILING_CITY as CITY, mc.MAILING_STATE as STATE, COUNT(DISTINCT ma.MW_UUID) as USER_COUNT
@@ -172,16 +185,16 @@
       AND mc.MAILING_CITY IS NOT NULL AND mc.MAILING_CITY != ''
     GROUP BY mc.MAILING_CITY, mc.MAILING_STATE ORDER BY USER_COUNT DESC LIMIT 10;
     -- Results:
-    -- Brooklyn, NY: 1,324
-    -- Bronx, NY: 314
-    -- Houston, TX: 167
-    -- New York, NY: 132
-    -- Miami, FL: 105
-    -- Jamaica, NY: 104
-    -- Chicago, IL: 99
-    -- Detroit, MI: 88
-    -- Philadelphia, PA: 88
-    -- Dallas, TX: 87
+    -- Brooklyn, NY: 2,096
+    -- Bronx, NY: 538
+    -- New York, NY: 239
+    -- Houston, TX: 222
+    -- Miami, FL: 160
+    -- Jamaica, NY: 152
+    -- Philadelphia, PA: 148
+    -- Chicago, IL: 141
+    -- Detroit, MI: 127
+    -- Dallas, TX: 124
 
     ============================================================================
     -->
@@ -462,22 +475,22 @@
                 <h2 class="section-title">Executive Summary</h2>
                 <div class="metrics-grid">
                     <div class="metric-card primary">
-                        <div class="metric-value">11,021</div>
+                        <div class="metric-value">16,939</div>
                         <div class="metric-label">Total Organic Users</div>
                     </div>
                     <div class="metric-card success">
-                        <div class="metric-value">29.89%</div>
+                        <div class="metric-value">31.52%</div>
                         <div class="metric-label">Activation Rate</div>
                     </div>
                     <div class="metric-card warning">
-                        <div class="metric-value">3,294</div>
+                        <div class="metric-value">5,338</div>
                         <div class="metric-label">Users with Transactions</div>
                     </div>
                 </div>
 
                 <div class="alert-box warning">
                     <h4>Key Finding</h4>
-                    <p>70.11% of November organic users (7,727 out of 11,021) have not completed any transactions since account creation. However, 3,294 users (29.89%) have activated their accounts, with 91.9% of those activating within 7 days of account creation.</p>
+                    <p>68.48% of November organic users (11,601 out of 16,939) have not completed any transactions since account creation. However, 5,338 users (31.52%) have activated their accounts, with 90.95% of those activating within 7 days of account creation.</p>
                 </div>
             </div>
 
@@ -507,25 +520,25 @@
                                     <td>Week 1</td>
                                     <td>Nov 1-7</td>
                                     <td>1,490</td>
-                                    <td>13.5%</td>
+                                    <td>8.8%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 2</td>
                                     <td>Nov 8-14</td>
                                     <td>1,473</td>
-                                    <td>13.4%</td>
+                                    <td>8.7%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 3</td>
                                     <td>Nov 15-21</td>
                                     <td>5,633</td>
-                                    <td>51.1%</td>
+                                    <td>33.3%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 4</td>
                                     <td>Nov 22-30</td>
-                                    <td>2,425</td>
-                                    <td>22.0%</td>
+                                    <td>8,343</td>
+                                    <td>49.3%</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -534,7 +547,7 @@
 
                 <div class="insight-box">
                     <h4>Key Insight</h4>
-                    <p>Week 3 (Nov 15-21) saw a massive surge in organic acquisitions with 5,633 users - more than 3x the previous weeks. This coincides with November 19th peak (1,978 users in a single day). Week 4 data is partial (through Nov 24) but still showing strong numbers at 2,425 users.</p>
+                    <p>Week 3 and Week 4 saw massive surges in organic acquisitions. Week 3 (Nov 15-21) brought 5,633 users, while Week 4 (Nov 22-30) was even larger with 8,343 users - representing 49.3% of the entire month's acquisitions. November 19th remained the single peak day at 1,978 users, but Nov 24-26 each saw 1,700+ users.</p>
                 </div>
             </div>
 
@@ -549,7 +562,7 @@
 
                 <div class="insight-box">
                     <h4>Daily Pattern Analysis</h4>
-                    <p>Organic acquisition spiked dramatically starting November 17th, with November 19th being the peak day at 1,978 users. The period from Nov 17-24 averaged 885 users/day, compared to just 213 users/day during Nov 1-16. This 4x increase suggests a significant change in organic visibility or a successful campaign driving organic traffic.</p>
+                    <p>Organic acquisition spiked dramatically starting November 17th. The period from Nov 17-26 averaged 1,150 users/day, compared to just 213 users/day during Nov 1-16. This represents a 5.4x increase. Notable peaks: Nov 19 (1,978), Nov 24 (1,724), Nov 25 (1,720), and Nov 26 (1,715). Thanksgiving weekend (Nov 27-30) saw a decline to an average of 337 users/day.</p>
                 </div>
             </div>
 
@@ -559,7 +572,7 @@
                 
                 <div class="insight-box">
                     <h4>Key Insight</h4>
-                    <p>New York dominates organic acquisition with 24.87% of all users (2,759), with Brooklyn alone accounting for 1,324 users (12% of total). The top 10 states represent 67.3% of all organic users, indicating strong geographic concentration in the Northeast and major metro areas.</p>
+                    <p>New York dominates organic acquisition with 26.08% of all users (4,418), with Brooklyn alone accounting for 2,096 users (12.4% of total). The top 10 states represent 68.3% of all organic users, indicating strong geographic concentration in the Northeast and major metro areas.</p>
                 </div>
 
                 <div class="grid-2">
@@ -592,62 +605,62 @@
                             <tr>
                                 <td>1</td>
                                 <td>New York</td>
-                                <td>2,759</td>
-                                <td>24.87%</td>
+                                <td>4,418</td>
+                                <td>26.08%</td>
                             </tr>
                             <tr>
                                 <td>2</td>
                                 <td>Texas</td>
-                                <td>947</td>
-                                <td>8.54%</td>
+                                <td>1,342</td>
+                                <td>7.92%</td>
                             </tr>
                             <tr>
                                 <td>3</td>
                                 <td>Florida</td>
-                                <td>832</td>
-                                <td>7.50%</td>
+                                <td>1,239</td>
+                                <td>7.31%</td>
                             </tr>
                             <tr>
                                 <td>4</td>
                                 <td>California</td>
-                                <td>633</td>
-                                <td>5.71%</td>
+                                <td>934</td>
+                                <td>5.51%</td>
                             </tr>
                             <tr>
                                 <td>5</td>
                                 <td>Georgia</td>
-                                <td>473</td>
-                                <td>4.26%</td>
+                                <td>785</td>
+                                <td>4.63%</td>
                             </tr>
                             <tr>
                                 <td>6</td>
                                 <td>New Jersey</td>
-                                <td>391</td>
-                                <td>3.52%</td>
+                                <td>658</td>
+                                <td>3.88%</td>
                             </tr>
                             <tr>
                                 <td>7</td>
-                                <td>Ohio</td>
-                                <td>385</td>
-                                <td>3.47%</td>
+                                <td>Pennsylvania</td>
+                                <td>621</td>
+                                <td>3.67%</td>
                             </tr>
                             <tr>
                                 <td>8</td>
-                                <td>North Carolina</td>
-                                <td>375</td>
-                                <td>3.38%</td>
+                                <td>Ohio</td>
+                                <td>591</td>
+                                <td>3.49%</td>
                             </tr>
                             <tr>
                                 <td>9</td>
-                                <td>Pennsylvania</td>
-                                <td>341</td>
+                                <td>North Carolina</td>
+                                <td>520</td>
                                 <td>3.07%</td>
                             </tr>
                             <tr>
                                 <td>10</td>
                                 <td>Illinois</td>
-                                <td>328</td>
-                                <td>2.96%</td>
+                                <td>458</td>
+                                <td>2.70%</td>
                             </tr>
                         </tbody>
                     </table>
@@ -660,19 +673,19 @@
 
                 <div class="metrics-grid">
                     <div class="metric-card success">
-                        <div class="metric-value">3,294</div>
+                        <div class="metric-value">5,338</div>
                         <div class="metric-label">Users with Any Transaction</div>
                     </div>
                     <div class="metric-card primary">
-                        <div class="metric-value">3,026</div>
+                        <div class="metric-value">4,855</div>
                         <div class="metric-label">Transacted Within 7 Days</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value">91.9%</div>
+                        <div class="metric-value">90.95%</div>
                         <div class="metric-label">7-Day Activation (of Active Users)</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value">34,516</div>
+                        <div class="metric-value">66,952</div>
                         <div class="metric-label">Total Transactions</div>
                     </div>
                 </div>
@@ -706,45 +719,57 @@
                         <tbody>
                             <tr>
                                 <td>Visa Money Transfer</td>
-                                <td>12,862</td>
-                                <td>2,350</td>
-                                <td>5.5</td>
+                                <td>25,877</td>
+                                <td>4,011</td>
+                                <td>6.5</td>
                             </tr>
                             <tr>
                                 <td>Card Purchase</td>
-                                <td>9,615</td>
-                                <td>1,597</td>
-                                <td>6.0</td>
+                                <td>19,311</td>
+                                <td>3,442</td>
+                                <td>5.6</td>
                             </tr>
                             <tr>
                                 <td>Other</td>
-                                <td>6,161</td>
-                                <td>1,269</td>
-                                <td>4.9</td>
+                                <td>12,183</td>
+                                <td>2,176</td>
+                                <td>5.6</td>
                             </tr>
                             <tr>
                                 <td>Incoming P2P</td>
-                                <td>2,078</td>
-                                <td>775</td>
-                                <td>2.7</td>
+                                <td>3,525</td>
+                                <td>1,236</td>
+                                <td>2.9</td>
                             </tr>
                             <tr>
                                 <td>Outgoing P2P</td>
-                                <td>1,783</td>
-                                <td>869</td>
-                                <td>2.1</td>
+                                <td>3,125</td>
+                                <td>1,533</td>
+                                <td>2.0</td>
                             </tr>
                             <tr>
                                 <td>Barcode Cashload</td>
-                                <td>1,072</td>
-                                <td>454</td>
-                                <td>2.4</td>
+                                <td>1,611</td>
+                                <td>636</td>
+                                <td>2.5</td>
                             </tr>
                             <tr>
                                 <td>Top Up</td>
-                                <td>238</td>
-                                <td>103</td>
-                                <td>2.3</td>
+                                <td>377</td>
+                                <td>168</td>
+                                <td>2.2</td>
+                            </tr>
+                            <tr>
+                                <td>Direct Deposit</td>
+                                <td>300</td>
+                                <td>126</td>
+                                <td>2.4</td>
+                            </tr>
+                            <tr>
+                                <td>Allpoint ATM</td>
+                                <td>235</td>
+                                <td>77</td>
+                                <td>3.1</td>
                             </tr>
                             <tr>
                                 <td>Bambu Pay Incoming</td>
@@ -753,34 +778,22 @@
                                 <td>2.2</td>
                             </tr>
                             <tr>
-                                <td>Direct Deposit</td>
-                                <td>183</td>
-                                <td>86</td>
-                                <td>2.1</td>
-                            </tr>
-                            <tr>
-                                <td>Allpoint ATM</td>
-                                <td>157</td>
-                                <td>41</td>
-                                <td>3.8</td>
-                            </tr>
-                            <tr>
                                 <td>IMT</td>
-                                <td>108</td>
-                                <td>9</td>
-                                <td>12.0</td>
+                                <td>125</td>
+                                <td>10</td>
+                                <td>12.5</td>
                             </tr>
                             <tr>
                                 <td>Card Cashload</td>
-                                <td>28</td>
-                                <td>14</td>
-                                <td>2.0</td>
+                                <td>44</td>
+                                <td>23</td>
+                                <td>1.9</td>
                             </tr>
                             <tr>
                                 <td>Visa Plus Load</td>
-                                <td>23</td>
-                                <td>10</td>
-                                <td>2.3</td>
+                                <td>31</td>
+                                <td>12</td>
+                                <td>2.6</td>
                             </tr>
                         </tbody>
                     </table>
@@ -788,7 +801,7 @@
 
                 <div class="insight-box">
                     <h4>Feature Adoption Insight</h4>
-                    <p><strong>Visa Money Transfer dominates</strong> with 12,862 transactions across 2,350 users (71.3% of active users). This indicates strong remittance use case adoption among organic users. Card Purchase is second with 9,615 transactions, showing healthy everyday spending usage. The high 7-day activation rate (91.9%) suggests that users who will transact do so quickly after account creation.</p>
+                    <p><strong>Visa Money Transfer dominates</strong> with 25,877 transactions across 4,011 users (75.1% of active users). This indicates strong remittance use case adoption among organic users. Card Purchase is second with 19,311 transactions, showing healthy everyday spending usage. The high 7-day activation rate (90.95%) suggests that users who will transact do so quickly after account creation.</p>
                 </div>
             </div>
 
@@ -798,7 +811,7 @@
 
                 <div class="alert-box warning">
                     <h4>Activation Overview</h4>
-                    <p>70.11% of November organic users have not completed any transactions yet. While this represents 7,727 inactive users, the 29.89% activation rate shows strong engagement, and these active users are showing strong transaction engagement with an average of 10.5 transactions per active user.</p>
+                    <p>68.48% of November organic users have not completed any transactions yet. While this represents 11,601 inactive users, the 31.52% activation rate shows strong engagement, and these active users are showing strong transaction engagement with an average of 12.5 transactions per active user.</p>
                 </div>
 
                 <div class="grid-2">
@@ -824,30 +837,30 @@
                                 <tr>
                                     <td>Week 1</td>
                                     <td>1,490</td>
-                                    <td>480</td>
-                                    <td>1,010</td>
-                                    <td>67.79%</td>
+                                    <td>541</td>
+                                    <td>949</td>
+                                    <td>63.69%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 2</td>
                                     <td>1,473</td>
-                                    <td>458</td>
-                                    <td>1,015</td>
-                                    <td>68.91%</td>
+                                    <td>536</td>
+                                    <td>937</td>
+                                    <td>63.61%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 3</td>
                                     <td>5,633</td>
-                                    <td>1,877</td>
-                                    <td>3,756</td>
-                                    <td>66.68%</td>
+                                    <td>2,218</td>
+                                    <td>3,415</td>
+                                    <td>60.63%</td>
                                 </tr>
                                 <tr>
                                     <td>Week 4</td>
-                                    <td>2,425</td>
-                                    <td>479</td>
-                                    <td>1,946</td>
-                                    <td>80.25%</td>
+                                    <td>8,343</td>
+                                    <td>2,043</td>
+                                    <td>6,300</td>
+                                    <td>75.51%</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -856,7 +869,7 @@
 
                 <div class="insight-box">
                     <h4>Activation Pattern Analysis</h4>
-                    <p>Weeks 1-3 show consistent activation rates around 31-33%, with Week 3's massive volume (5,633 users) maintaining the same quality. Week 4 shows higher inactive rate (80.25%) but these users are still very new (0-3 days old) and may still activate. The consistent ~67-69% inactive rate across Weeks 1-3 suggests a stable user quality regardless of acquisition volume.</p>
+                    <p>Weeks 1-3 show consistent activation rates around 36-39%, with Week 3's massive volume (5,633 users) actually showing the best activation rate at 39.37%. Week 4 shows higher inactive rate (75.51%) but these users are still relatively new (1-9 days old as of Dec 1) and may still activate. The improving activation rates from Weeks 1-3 suggest user quality may actually be improving with increased volume.</p>
                 </div>
             </div>
 
@@ -876,13 +889,13 @@
                 <div class="recommendations">
                     <h4>Strategic Actions</h4>
                     <ul>
-                        <li><strong>Investigate Week 3 Spike:</strong> The 4x increase in organic acquisition starting Nov 17th warrants investigation to understand what drove this growth and how to sustain it.</li>
-                        <li><strong>Target Week 4 Cohort:</strong> With 80.25% still inactive, these 1,946 users are still in the critical activation window. Deploy re-engagement campaigns immediately.</li>
-                        <li><strong>Remittance-First Onboarding:</strong> Since Visa Money Transfer is the #1 transaction type (71.3% of active users), emphasize remittance features in the onboarding flow.</li>
-                        <li><strong>7-Day Window Focus:</strong> 91.9% of users who activate do so within 7 days. Concentrate all re-engagement efforts within this window.</li>
-                        <li><strong>Re-engage 7,727 Inactive Users:</strong> Deploy targeted push notifications and email campaigns to the inactive cohort with incentives for first transaction.</li>
-                        <li><strong>New York Focus:</strong> With 25% of organic users from New York (especially Brooklyn), consider geo-targeted campaigns and local partnerships in the NYC metro area.</li>
-                        <li><strong>Capitalize on Volume:</strong> The consistent ~32% activation rate suggests acquisition quality is stable. Focus on increasing volume while maintaining this rate.</li>
+                        <li><strong>Investigate Nov 17-26 Spike:</strong> The 5.4x increase in organic acquisition during this period warrants investigation to understand what drove this growth and how to sustain it.</li>
+                        <li><strong>Target Week 4 Cohort:</strong> With 75.51% still inactive (6,300 users), these users are still in the critical activation window. Deploy re-engagement campaigns immediately.</li>
+                        <li><strong>Remittance-First Onboarding:</strong> Since Visa Money Transfer is the #1 transaction type (75.1% of active users), emphasize remittance features in the onboarding flow.</li>
+                        <li><strong>7-Day Window Focus:</strong> 90.95% of users who activate do so within 7 days. Concentrate all re-engagement efforts within this window.</li>
+                        <li><strong>Re-engage 11,601 Inactive Users:</strong> Deploy targeted push notifications and email campaigns to the inactive cohort with incentives for first transaction.</li>
+                        <li><strong>New York Focus:</strong> With 26% of organic users from New York (especially Brooklyn with 2,096 users), consider geo-targeted campaigns and local partnerships in the NYC metro area.</li>
+                        <li><strong>Capitalize on Volume:</strong> The consistent ~36-39% activation rate in Weeks 1-3 suggests acquisition quality is stable. Focus on increasing volume while maintaining this rate.</li>
                     </ul>
                 </div>
             </div>
@@ -891,6 +904,7 @@
         <div class="footer">
             <p><strong>MyBambu Paid Ads Team</strong></p>
             <p>Data Sources: Snowflake MART_ACCOUNT, MART_CONTACT, MART_SRDF_POSTED_TRANSACTIONS</p>
+            <p>Last Updated: December 1, 2025</p>
         </div>
     </div>
 
@@ -902,7 +916,7 @@
                 labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
                 datasets: [{
                     label: 'Users Acquired',
-                    data: [1490, 1473, 5633, 2425],
+                    data: [1490, 1473, 5633, 8343],
                     backgroundColor: ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd'],
                     borderRadius: 8
                 }]
@@ -923,10 +937,10 @@
         new Chart(document.getElementById('dailyChart'), {
             type: 'line',
             data: {
-                labels: ['Nov 1', 'Nov 2', 'Nov 3', 'Nov 4', 'Nov 5', 'Nov 6', 'Nov 7', 'Nov 8', 'Nov 9', 'Nov 10', 'Nov 11', 'Nov 12', 'Nov 13', 'Nov 14', 'Nov 15', 'Nov 16', 'Nov 17', 'Nov 18', 'Nov 19', 'Nov 20', 'Nov 21', 'Nov 22', 'Nov 23', 'Nov 24'],
+                labels: ['Nov 1', 'Nov 2', 'Nov 3', 'Nov 4', 'Nov 5', 'Nov 6', 'Nov 7', 'Nov 8', 'Nov 9', 'Nov 10', 'Nov 11', 'Nov 12', 'Nov 13', 'Nov 14', 'Nov 15', 'Nov 16', 'Nov 17', 'Nov 18', 'Nov 19', 'Nov 20', 'Nov 21', 'Nov 22', 'Nov 23', 'Nov 24', 'Nov 25', 'Nov 26', 'Nov 27', 'Nov 28', 'Nov 29', 'Nov 30'],
                 datasets: [{
                     label: 'Daily Users',
-                    data: [215, 211, 244, 210, 206, 200, 204, 209, 145, 245, 219, 230, 227, 198, 171, 161, 320, 566, 1978, 1071, 1366, 879, 959, 587],
+                    data: [215, 211, 244, 210, 206, 200, 204, 209, 145, 245, 219, 230, 227, 198, 171, 161, 320, 566, 1978, 1071, 1366, 879, 959, 1724, 1720, 1715, 564, 327, 271, 184],
                     borderColor: '#1e40af',
                     backgroundColor: 'rgba(30, 64, 175, 0.1)',
                     fill: true,
@@ -951,10 +965,10 @@
         new Chart(document.getElementById('statesChart'), {
             type: 'bar',
             data: {
-                labels: ['New York', 'Texas', 'Florida', 'California', 'Georgia', 'New Jersey', 'Ohio', 'North Carolina', 'Pennsylvania', 'Illinois'],
+                labels: ['New York', 'Texas', 'Florida', 'California', 'Georgia', 'New Jersey', 'Pennsylvania', 'Ohio', 'North Carolina', 'Illinois'],
                 datasets: [{
                     label: 'Users',
-                    data: [2759, 947, 832, 633, 473, 391, 385, 375, 341, 328],
+                    data: [4418, 1342, 1239, 934, 785, 658, 621, 591, 520, 458],
                     backgroundColor: '#3b82f6',
                     borderRadius: 6
                 }]
@@ -976,10 +990,10 @@
         new Chart(document.getElementById('citiesChart'), {
             type: 'bar',
             data: {
-                labels: ['Brooklyn', 'Bronx', 'Houston', 'New York', 'Miami', 'Jamaica', 'Chicago', 'Detroit', 'Philadelphia', 'Dallas'],
+                labels: ['Brooklyn', 'Bronx', 'New York', 'Houston', 'Miami', 'Jamaica', 'Philadelphia', 'Chicago', 'Detroit', 'Dallas'],
                 datasets: [{
                     label: 'Users',
-                    data: [1324, 314, 167, 132, 105, 104, 99, 88, 88, 87],
+                    data: [2096, 538, 239, 222, 160, 152, 148, 141, 127, 124],
                     backgroundColor: '#10b981',
                     borderRadius: 6
                 }]
@@ -1003,7 +1017,7 @@
                 labels: ['Visa Money Transfer', 'Card Purchase', 'Other', 'Incoming P2P', 'Outgoing P2P', 'Barcode Cashload', 'Top Up'],
                 datasets: [{
                     label: 'Transactions',
-                    data: [12862, 9615, 6161, 2078, 1783, 1072, 238],
+                    data: [25877, 19311, 12183, 3525, 3125, 1611, 377],
                     backgroundColor: ['#7c3aed', '#1e40af', '#6b7280', '#10b981', '#f59e0b', '#06b6d4', '#ec4899'],
                     borderRadius: 6
                 }]
@@ -1024,7 +1038,7 @@
             data: {
                 labels: ['Visa Money Transfer', 'Card Purchase', 'Other', 'Outgoing P2P', 'Incoming P2P', 'Barcode Cashload', 'Top Up'],
                 datasets: [{
-                    data: [2350, 1597, 1269, 869, 775, 454, 103],
+                    data: [4011, 3442, 2176, 1533, 1236, 636, 168],
                     backgroundColor: ['#7c3aed', '#1e40af', '#6b7280', '#f59e0b', '#10b981', '#06b6d4', '#ec4899'],
                     borderWidth: 0
                 }]
@@ -1047,7 +1061,7 @@
             data: {
                 labels: ['Inactive (No Transactions)', 'Activated'],
                 datasets: [{
-                    data: [7727, 3294],
+                    data: [11601, 5338],
                     backgroundColor: ['#f59e0b', '#10b981'],
                     borderWidth: 0
                 }]
@@ -1071,13 +1085,13 @@
                 datasets: [
                     {
                         label: 'Activated',
-                        data: [480, 458, 1877, 479],
+                        data: [541, 536, 2218, 2043],
                         backgroundColor: '#10b981',
                         borderRadius: 6
                     },
                     {
                         label: 'Inactive',
-                        data: [1010, 1015, 3756, 1946],
+                        data: [949, 937, 3415, 6300],
                         backgroundColor: '#f59e0b',
                         borderRadius: 6
                     }
