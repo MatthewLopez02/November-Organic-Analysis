@@ -17,6 +17,7 @@
              throughout report since users are not technically churned yet)
     Updated: November 24, 2025 (added Geographic Distribution section)
     Updated: December 1, 2025 (updated with complete November 2025 data - Nov 1-30)
+    Updated: December 1, 2025 (added TabaPay Incoming/Outgoing transaction categories)
     Created By: Claude AI for MyBambu Paid Ads Team
 
     CHANGE LOG:
@@ -33,6 +34,9 @@
     - v5: Total users increased from 11,021 to 16,939
     - v5: Week 4 now includes Nov 22-30 (was partial through Nov 24)
     - v5: All metrics recalculated with full month data
+    - v6: Added TabaPay Incoming and TabaPay Outgoing transaction categories
+    - v6: TabaPay categories use MERCHANT_NUMBER field for identification
+    - v6: TabaPay takes priority over Bambu Pay in category assignment
 
     DATA SOURCES:
     1. MYBAMBU_PROD.BAMBU_MART_SF.MART_ACCOUNT
@@ -66,7 +70,12 @@
        - Calculated by LEFT JOINing users to transactions and counting NULLs
 
     4. Transaction Categories (from SRDF Posted Transactions):
+       NOTE: Categories are evaluated in order - first match wins.
+       TabaPay categories are checked BEFORE Bambu Pay categories.
+       
        - Visa Plus Load: TRANSACTION_CODE = 'PMVD'
+       - TabaPay Incoming: TRANSACTION_CODE = 'PMVH' AND MERCHANT_NUMBER = 'A00009038461000'
+       - TabaPay Outgoing: TRANSACTION_CODE = 'VSA' AND MERCHANT_NUMBER = 'A00009038461001'
        - Bambu Pay Incoming: TRANSACTION_CODE = 'PMVH' AND MERCHANT_DESCRIPTION LIKE 'ASTRA*MyBambu%'
        - Bambu Pay Outgoing: TRANSACTION_CODE = 'VSA' AND MERCHANT_DESCRIPTION LIKE 'ASTRA*MyBambu%'
        - Card Purchase: TRANSACTION_TYPE IN ('Purchase with PIN', 'Pre-auth completion')
@@ -137,14 +146,16 @@
     -- Week 3: 5,633 total, 2,218 activated, 3,415 inactive (60.63%)
     -- Week 4: 8,343 total, 2,043 activated, 6,300 inactive (75.51%)
 
-    -- Transaction Categories:
-    -- Visa Money Transfer: 25,877 txns, 4,011 users
-    -- Card Purchase: 19,311 txns, 3,442 users
+    -- Transaction Categories (with TabaPay categories):
+    -- TabaPay Incoming: 24,672 txns, 3,724 users
+    -- Card Purchase: 18,971 txns, 3,384 users
     -- Other: 12,183 txns, 2,176 users
     -- Incoming P2P: 3,525 txns, 1,236 users
     -- Outgoing P2P: 3,125 txns, 1,533 users
     -- Barcode Cashload: 1,611 txns, 636 users
+    -- Visa Money Transfer: 1,205 txns, 541 users
     -- Top Up: 377 txns, 168 users
+    -- TabaPay Outgoing: 340 txns, 178 users
     -- Direct Deposit: 300 txns, 126 users
     -- Allpoint ATM: 235 txns, 77 users
     -- Bambu Pay Incoming: 199 txns, 90 users
@@ -718,15 +729,15 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Visa Money Transfer</td>
-                                <td>25,877</td>
-                                <td>4,011</td>
-                                <td>6.5</td>
+                                <td>TabaPay Incoming</td>
+                                <td>24,672</td>
+                                <td>3,724</td>
+                                <td>6.6</td>
                             </tr>
                             <tr>
                                 <td>Card Purchase</td>
-                                <td>19,311</td>
-                                <td>3,442</td>
+                                <td>18,971</td>
+                                <td>3,384</td>
                                 <td>5.6</td>
                             </tr>
                             <tr>
@@ -754,10 +765,22 @@
                                 <td>2.5</td>
                             </tr>
                             <tr>
+                                <td>Visa Money Transfer</td>
+                                <td>1,205</td>
+                                <td>541</td>
+                                <td>2.2</td>
+                            </tr>
+                            <tr>
                                 <td>Top Up</td>
                                 <td>377</td>
                                 <td>168</td>
                                 <td>2.2</td>
+                            </tr>
+                            <tr>
+                                <td>TabaPay Outgoing</td>
+                                <td>340</td>
+                                <td>178</td>
+                                <td>1.9</td>
                             </tr>
                             <tr>
                                 <td>Direct Deposit</td>
@@ -795,13 +818,19 @@
                                 <td>12</td>
                                 <td>2.6</td>
                             </tr>
+                            <tr>
+                                <td>Bambu Pay Outgoing</td>
+                                <td>9</td>
+                                <td>4</td>
+                                <td>2.3</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="insight-box">
                     <h4>Feature Adoption Insight</h4>
-                    <p><strong>Visa Money Transfer dominates</strong> with 25,877 transactions across 4,011 users (75.1% of active users). Card Purchase is second with 19,311 transactions, showing healthy everyday spending usage. The high 7-day activation rate (90.95%) suggests that users who will transact do so quickly after account creation.</p>
+                    <p><strong>TabaPay Incoming dominates</strong> with 24,672 transactions across 3,724 users (69.8% of active users). Card Purchase is second with 18,971 transactions, showing healthy everyday spending usage. The high 7-day activation rate (90.95%) suggests that users who will transact do so quickly after account creation.</p>
                 </div>
             </div>
 
@@ -891,7 +920,7 @@
                     <ul>
                         <li><strong>Investigate Nov 17-26 Spike:</strong> The 5.4x increase in organic acquisition during this period warrants investigation to understand what drove this growth and how to sustain it.</li>
                         <li><strong>Target Week 4 Cohort:</strong> With 75.51% still inactive (6,300 users), these users are still in the critical activation window. Deploy re-engagement campaigns immediately.</li>
-                        <li><strong>Remittance-First Onboarding:</strong> Since Visa Money Transfer is the #1 transaction type (75.1% of active users), emphasize remittance features in the onboarding flow.</li>
+                        <li><strong>TabaPay-First Onboarding:</strong> Since TabaPay Incoming is the #1 transaction type (69.8% of active users), emphasize TabaPay features in the onboarding flow.</li>
                         <li><strong>7-Day Window Focus:</strong> 90.95% of users who activate do so within 7 days. Concentrate all re-engagement efforts within this window.</li>
                         <li><strong>Re-engage 11,601 Inactive Users:</strong> Deploy targeted push notifications and email campaigns to the inactive cohort with incentives for first transaction.</li>
                         <li><strong>New York Focus:</strong> With 26% of organic users from New York (especially Brooklyn with 2,096 users), consider geo-targeted campaigns and local partnerships in the NYC metro area.</li>
@@ -1013,10 +1042,10 @@
         new Chart(document.getElementById('transactionCategoryChart'), {
             type: 'bar',
             data: {
-                labels: ['Visa Money Transfer', 'Card Purchase', 'Other', 'Incoming P2P', 'Outgoing P2P', 'Barcode Cashload', 'Top Up'],
+                labels: ['TabaPay Incoming', 'Card Purchase', 'Other', 'Incoming P2P', 'Outgoing P2P', 'Barcode Cashload', 'Visa Money Transfer'],
                 datasets: [{
                     label: 'Transactions',
-                    data: [25877, 19311, 12183, 3525, 3125, 1611, 377],
+                    data: [24672, 18971, 12183, 3525, 3125, 1611, 1205],
                     backgroundColor: ['#7c3aed', '#1e40af', '#6b7280', '#10b981', '#f59e0b', '#06b6d4', '#ec4899'],
                     borderRadius: 6
                 }]
@@ -1035,9 +1064,9 @@
         new Chart(document.getElementById('featureAdoptionChart'), {
             type: 'doughnut',
             data: {
-                labels: ['Visa Money Transfer', 'Card Purchase', 'Other', 'Outgoing P2P', 'Incoming P2P', 'Barcode Cashload', 'Top Up'],
+                labels: ['TabaPay Incoming', 'Card Purchase', 'Other', 'Outgoing P2P', 'Incoming P2P', 'Barcode Cashload', 'Visa Money Transfer'],
                 datasets: [{
-                    data: [4011, 3442, 2176, 1533, 1236, 636, 168],
+                    data: [3724, 3384, 2176, 1533, 1236, 636, 541],
                     backgroundColor: ['#7c3aed', '#1e40af', '#6b7280', '#f59e0b', '#10b981', '#06b6d4', '#ec4899'],
                     borderWidth: 0
                 }]
